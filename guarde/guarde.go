@@ -1,4 +1,4 @@
-package guarder
+package guarde
 
 import (
 	"encoding/json"
@@ -35,6 +35,19 @@ type Guarde struct {
 	Suspects map[string]*Suspect
 }
 
+func (p *Guarde) guardeSelf() error {
+	for ip := range p.Suspects {
+		if p.Suspects[ip].Count < 5 {
+			continue
+		}
+		if err := runIptables(fmt.Sprintf("iptables -I INPUT --source %s -p tcp --dport %s -j REJECT", ip, p.HTTPort)); err != nil {
+			return err
+		}
+		log.Printf("put ip %s in port %s blacklist", p.HTTPort, ip)
+	}
+	return nil
+}
+
 func (p *PortGuarde) iptables() error {
 	if err := runIptables(fmt.Sprintf("iptables -I INPUT -p tcp --dport %s -j REJECT --reject-with tcp-reset", p.Port)); err != nil {
 		return err
@@ -62,18 +75,7 @@ func (p *Guarde) iptables() error {
 			return err
 		}
 	}
-
-	for ip := range p.Suspects {
-		if p.Suspects[ip].Count < 5 {
-			continue
-		}
-		if err := runIptables(fmt.Sprintf("iptables -I INPUT --source %s -p tcp --dport %s -j REJECT", ip, p.HTTPort)); err != nil {
-			return err
-		}
-		log.Printf("put ip %s in port %s blacklist", p.HTTPort, ip)
-	}
-
-	return nil
+	return p.guardeSelf()
 }
 
 func (p *Guarde) routes() error {
@@ -189,7 +191,7 @@ func runIptables(command string) error {
 }
 
 func (p *Guarde) loadConfig() error {
-	data, err := ioutil.ReadFile("guarder.json")
+	data, err := ioutil.ReadFile("guarde.json")
 	if err != nil {
 		log.Panic(err)
 	}
