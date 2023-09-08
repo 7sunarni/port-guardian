@@ -1,8 +1,8 @@
 package main
 
-import "port-guarde/guarde"
+import "port-guard/guard"
 
 func main() {
-	p := new(guarde.Guarde)
+	p := new(guard.Captain)
 	p.Run()
 }

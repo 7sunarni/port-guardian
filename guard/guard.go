@@ -1,4 +1,4 @@
-package guarde
+package guard
 
 import (
 	"encoding/json"
@@ -13,12 +13,12 @@ import (
 	"time"
 )
 
-type PortGuarde struct {
-	Port string `json:"port"`
-	Way  []Way  `json:"way"`
+type Guard struct {
+	Port      string     `json:"port"`
+	Passports []Passport `json:"passports"`
 }
 
-type Way struct {
+type Passport struct {
 	Path string `json:"path"`
 	Name string `json:"name"`
 	IP   string `json:"ip"`
@@ -29,13 +29,13 @@ type Suspect struct {
 	Count int       `json:"count"`
 }
 
-type Guarde struct {
-	HTTPort  string       `json:"httpPort"`
-	Ports    []PortGuarde `json:"ports"`
+type Captain struct {
+	HTTPort  string  `json:"httpPort"`
+	Ports    []Guard `json:"ports"`
 	Suspects map[string]*Suspect
 }
 
-func (p *Guarde) guardeSelf() error {
+func (p *Captain) guardSelf() error {
 	for ip := range p.Suspects {
 		if p.Suspects[ip].Count < 5 {
 			continue
@@ -48,12 +48,12 @@ func (p *Guarde) guardeSelf() error {
 	return nil
 }
 
-func (p *PortGuarde) iptables() error {
+func (p *Guard) iptables() error {
 	if err := runIptables(fmt.Sprintf("iptables -I INPUT -p tcp --dport %s -j REJECT --reject-with tcp-reset", p.Port)); err != nil {
 		return err
 	}
 
-	for _, path := range p.Way {
+	for _, path := range p.Passports {
 		if path.IP == "" {
 			continue
 		}
@@ -66,7 +66,7 @@ func (p *PortGuarde) iptables() error {
 	return nil
 }
 
-func (p *Guarde) iptables() error {
+func (p *Captain) iptables() error {
 	if err := runIptables("iptables -F"); err != nil {
 		return err
 	}
@@ -75,12 +75,12 @@ func (p *Guarde) iptables() error {
 			return err
 		}
 	}
-	return p.guardeSelf()
+	return p.guardSelf()
 }
 
-func (p *Guarde) routes() error {
+func (p *Captain) routes() error {
 	for i := range p.Ports {
-		for j, path := range p.Ports[i].Way {
+		for j, path := range p.Ports[i].Passports {
 			r := fmt.Sprintf("/%s/%s", p.Ports[i].Port, path.Path)
 			portIndex := i
 			wayIndex := j
@@ -96,7 +96,7 @@ func (p *Guarde) routes() error {
 					return
 				}
 				// refactor this
-				p.Ports[portIndex].Way[wayIndex].IP = ip
+				p.Ports[portIndex].Passports[wayIndex].IP = ip
 				p.iptables()
 				rw.WriteHeader(http.StatusOK)
 				rw.Write([]byte(ip))
@@ -107,14 +107,14 @@ func (p *Guarde) routes() error {
 }
 
 // route browser
-func (p *Guarde) routeIcon() error {
+func (p *Captain) routeIcon() error {
 	http.HandleFunc("/favicon.ico", func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("Hello, World!"))
 	})
 	return nil
 }
 
-func (p *Guarde) route404() error {
+func (p *Captain) route404() error {
 	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
@@ -136,7 +136,7 @@ func (p *Guarde) route404() error {
 	return nil
 }
 
-func (p *Guarde) routeConfig() error {
+func (p *Captain) routeConfig() error {
 	http.HandleFunc("/configs", func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 		json.NewEncoder(rw).Encode(p)
@@ -144,7 +144,7 @@ func (p *Guarde) routeConfig() error {
 	return nil
 }
 
-func (p *Guarde) watchSuspects() {
+func (p *Captain) watchSuspects() {
 	ticker := time.NewTicker(10 * time.Minute)
 	go func() {
 		for {
@@ -158,7 +158,7 @@ func (p *Guarde) watchSuspects() {
 	}()
 }
 
-func (p *Guarde) freeSuspects() error {
+func (p *Captain) freeSuspects() error {
 	for k, v := range p.Suspects {
 		// reset after 1 hr
 		if time.Now().After(v.Time.Add(time.Hour)) {
@@ -169,7 +169,7 @@ func (p *Guarde) freeSuspects() error {
 	return p.iptables()
 }
 
-func (p *Guarde) Run() error {
+func (p *Captain) Run() error {
 	p.loadConfig()
 	p.Suspects = make(map[string]*Suspect)
 	p.route404()
@@ -190,8 +190,8 @@ func runIptables(command string) error {
 	return c.Run()
 }
 
-func (p *Guarde) loadConfig() error {
-	data, err := ioutil.ReadFile("guarde.json")
+func (p *Captain) loadConfig() error {
+	data, err := ioutil.ReadFile("guard.json")
 	if err != nil {
 		log.Panic(err)
 	}
