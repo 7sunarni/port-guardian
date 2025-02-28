@@ -1,3 +1,3 @@
-module port-guard
+module port-guardian
 
 go 1.20

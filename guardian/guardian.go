@@ -1,4 +1,4 @@
-package guard
+package guardian
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type Guard struct {
+type Guardian struct {
 	Port      string     `json:"port"`
 	Passports []Passport `json:"passports"`
 }
@@ -30,8 +30,8 @@ type Suspect struct {
 }
 
 type Captain struct {
-	HTTPort  string  `json:"httpPort"`
-	Ports    []Guard `json:"ports"`
+	HTTPort  string     `json:"httpPort"`
+	Ports    []Guardian `json:"ports"`
 	Suspects map[string]*Suspect
 }
 
@@ -48,7 +48,7 @@ func (p *Captain) guardSelf() error {
 	return nil
 }
 
-func (p *Guard) iptables() error {
+func (p *Guardian) iptables() error {
 	if err := runIptables(fmt.Sprintf("iptables -I INPUT -p tcp --dport %s -j REJECT --reject-with tcp-reset", p.Port)); err != nil {
 		return err
 	}
@@ -87,8 +87,8 @@ func (p *Captain) routes() error {
 			http.HandleFunc(r, func(rw http.ResponseWriter, r *http.Request) {
 				ip, _, err := net.SplitHostPort(r.RemoteAddr)
 				if err != nil {
-					rw.WriteHeader(http.StatusInternalServerError)
 					rw.Write([]byte(err.Error()))
+					rw.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 				if path.IP == ip {
