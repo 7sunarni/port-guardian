@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/user/local/bin/port-guardian
+ExecStart=/usr/local/bin/port-guardian
 Restart=on-failure # or always, on-abort, etc
 
 [Install]
