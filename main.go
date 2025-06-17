@@ -1,6 +1,6 @@
 package main
 
-import "port-guardian/guardian"
+import "github.com/7sunarni/port-guardian/guardian"
 
 func main() {
 	p := new(guardian.Captain)
