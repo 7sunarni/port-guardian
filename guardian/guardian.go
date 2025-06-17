@@ -3,7 +3,6 @@ package guardian
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -183,15 +182,15 @@ func (p *Captain) Run() error {
 }
 
 func runIptables(command string) error {
-	splitedCommands := strings.Split(command, " ")
-	c := exec.Command("sudo", splitedCommands...)
+	spitedCommands := strings.Split(command, " ")
+	c := exec.Command("sudo", spitedCommands...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	return c.Run()
 }
 
 func (p *Captain) loadConfig() error {
-	data, err := ioutil.ReadFile("guard.json")
+	data, err := os.ReadFile("/etc/port-guardian/guardian.json")
 	if err != nil {
 		log.Panic(err)
 	}

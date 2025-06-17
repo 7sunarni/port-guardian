@@ -1,0 +1,11 @@
+[Unit]
+Description=My Miscellaneous Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/user/local/bin/port-guardian
+Restart=on-failure # or always, on-abort, etc
+
+[Install]
+WantedBy=multi-user.target

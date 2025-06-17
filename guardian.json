@@ -1,6 +1,14 @@
 {
-    "httpPort":"54321",
-    "ports":[
-        {"port":"56790","passports":[{"path":"55h","name":"55h"}]}
+    "httpPort": "54321",
+    "ports": [
+        {
+            "port": "56790",
+            "passports": [
+                {
+                    "path": "55h",
+                    "name": "55h"
+                }
+            ]
+        }
     ]
 }
